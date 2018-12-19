@@ -1,65 +1,307 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Elevation service</title>
+<head>
     <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+        html,
+        body {
+            font-family: Arial, sans-serif;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            height: 100%;
+            position: relative;
+        }
+        input {
+            font-size: 20px;
+        }
+        h1 {
+            color: #FFFFFF;
+            font-size: 22px;
+            margin: 0px;
+            text-align: center;
+        }
+        
+        #map {
+            bottom: 0px;
+            height: 100%;
+            left: 0px;
+            position: absolute;
+            right: 0px;
+            z-index: 4;
+        }
+        .options-box {
+            background: #808080;
+            border: 1px solid #999;
+            border-radius: 3px;
+            height: 22%;
+            line-height: 35px;
+            padding: 10px 10px 30px 10px;
+            text-align: left;
+            width: 280px;
+            z-index: 5;
+            position: relative;
+        }
     </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
-      function initMap() {
+    <script
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+</head>
+<body>
+<div class="container">
+    <div class="options-box">
+        <h1>Select Two Points On The Map : </h1>
+
+        <div>
+            <input id="value_1" placeholder="Elivation 1">
+            <input id="value_2" placeholder="Elivation 2">
+            <input id="result" placeholder="Result">
+        </div>
+
+        <input id="calculate-tilt" type="button" value="Calculate Tilt">
+
+    </div>
+
+</div>
+<div id="map"></div>
+</div>
+<script>
+    var map;
+    var flightPath;
+    var obj = {
+        value_1: '',
+        value_2: '',
+        x1: '',
+        y1: '',
+        x2: '',
+        y2: '',
+        distance: 1
+    };
+    // Create a new blank array for all the listing markers.
+    var markers = [];
+    // This function populates the infowindow when the marker is clicked. We'll only allow
+    // one infowindow which will open at the marker that is clicked, and populate based
+    // on that markers position.
+    function populateInfoWindow(marker, infowindow) {
+        // Check to make sure the infowindow is not already opened on this marker.
+        if (infowindow.marker != marker) {
+            infowindow.marker = marker;
+            infowindow.setContent('<div>' + marker.title + '</div>');
+            infowindow.open(map, marker);
+            // Make sure the marker property is cleared if the infowindow is closed.
+            infowindow.addListener('closeclick', function () {
+                infowindow.marker = null;
+            });
+        }
+    }
+    // This function will loop through the markers array and display them all.
+    function initMap() {
         var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 8,
-          center: {lat: 31.517, lng: 34.450},  // Denali.
-          mapTypeId: 'terrain'
+            zoom: 9,
+            center: {lat: 31.856465, lng: 35.031312},  // Gaza city. 31.856465, 35.031312
+            mapTypeId: 'terrain'
         });
+        // Polygon begining 
+        // Define the LatLng coordinates for the polygon's path.
+  var triangleCoords = [
+           {lat: 31.351524, lng: 34.303996},    
+           {lat: 31.35016 , lng: 34.302697},
+           {lat: 31.349528, lng: 34.305321},     
+           {lat: 31.351524, lng: 34.303996}
+           ];
+   var tri = [ 
+   
+           {lat: 31.351524, lng: 34.303996},    
+           {lat: 31.350519, lng: 34.306743},    //31.350519, 34.306743
+           {lat: 31.350270, lng: 34.306715},    //31.350270, 34.306715
+           {lat: 31.350055, lng: 34.306693},    //31.350055, 34.306693
+           {lat: 31.350009, lng: 34.306227},    //31.350009, 34.306227
+           {lat: 31.351524, lng: 34.303996}
+   ]
+        // 31.350645, 34.307418
+        // 31.349802, 34.307289
+        // 31.349912, 34.306087
+   var triii = [ 
+   
+           {lat: 31.351524, lng: 34.303996},    
+           {lat: 31.350645, lng: 34.307418},    //
+           {lat: 31.349802, lng: 34.307289},    //
+           {lat: 31.349912, lng: 34.306087},    //
+           {lat: 31.351524, lng: 34.303996}
+   ]
+  // Construct the polygon1
+  var bermudaTriangle = new google.maps.Polygon({
+    paths: triangleCoords,
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#FF0000',
+    fillOpacity: 0.35
+  });
+  bermudaTriangle.setMap(map);
+  
+  // Construct the polygon2
+  var bermudaTri = new google.maps.Polygon({
+    paths: tri,
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#FF0000',
+    fillOpacity: 0.35
+  });
+  bermudaTri.setMap(map);
+  // Construct the polygon3
+  var bermudaTriii = new google.maps.Polygon({
+    paths: triii,
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#7a8fef',
+    fillOpacity: 0.35
+  });
+  bermudaTriii.setMap(map);
+// colour search #ff0000 color 
+  
+        // end of polygons 
         var elevator = new google.maps.ElevationService;
         var infowindow = new google.maps.InfoWindow({map: map});
-
+        // Badwater, Death Valley
         // Add a listener for the click event. Display the elevation for the LatLng of
         // the click inside the infowindow.
-        map.addListener('click', function(event) {
-          displayLocationElevation(event.latLng, elevator, infowindow);
+        map.addListener('click', function (event) {
+            displayLocationElevation(event.latLng, elevator, infowindow, map);
         });
-      }
-
-      function displayLocationElevation(location, elevator, infowindow) {
+        geocoder = new google.maps.Geocoder();
+        latlngbounds = new google.maps.LatLngBounds();  
+        var udicty = {lat:31.428,lng:34.342};
+        var marker = new google.maps.Marker({
+           position: udicty,
+           map: map, 
+           title: 'Basem Passed from here!'
+        });
+        var infowindow = new google.maps.Infowindow({
+          content: 'Hi my friend im basem doing somthing great '
+        });
+        marker.addListener('click', function() { 
+          infowindow.open(map, marker);
+        });
+            }
+    //draw line on map
+    function displayPathElevation(path, elevator, map) {
+        // Display a polyline of the elevation path.
+        flightPath = new google.maps.Polyline({
+            path: path,
+            strokeColor: '#0000CC',
+            strokeOpacity: 0.4,
+            map: map
+        });
+        // Create a PathElevationRequest object using this array.
+        // Ask for 256 samples along that path.
+        // Initiate the path request.
+        elevator.getElevationAlongPath({
+            'path': path,
+            'samples': 256
+        }, plotElevation);
+    }
+    //remove line when select another point
+    function removeLine() {
+        flightPath.setMap(null);
+        flightPath = null;
+    }
+    //no use, but dont delete it
+    function plotElevation() {
+    }
+    //core
+    function displayLocationElevation(location, elevator, infowindow, map) {
         // Initiate the location request
         elevator.getElevationForLocations({
-          'locations': [location]
-        }, function(results, status) {
-          infowindow.setPosition(location);
-          if (status === 'OK') {
-            // Retrieve the first result
-            if (results[0]) {
-              // Open the infowindow indicating the elevation at the clicked position.
-              infowindow.setContent('The elevation at this point <br>is ' +
-                  results[0].elevation + ' meters.');
+            'locations': [location]
+        }, function (results, status) {
+            infowindow.setPosition(location);
+            if (status === 'OK') {
+                // Retrieve the first result
+                if (results[0]) {
+                    // Open the infowindow indicating the elevation at the clicked position.
+                    infowindow.setContent('The elevation at this point <br>is ' +
+                        results[0].elevation + ' meters.');
+                    if (obj.value_1 && !obj.value_2) { //get value of second point
+                        obj.value_2 = results[0].elevation;
+                        obj.x2 = location.lat();
+                        obj.y2 = location.lng();
+                        $("#value_2").val(obj.value_2);
+                        //find distance
+                        obj.distance = getDistance(obj.x1, obj.y1, obj.x2, obj.y2);
+                        //remove old line before drawing
+                        if (flightPath)
+                            removeLine();
+                        //draw line between to points
+                        var path = [
+                            {lat: obj.x1, lng: obj.y1},
+                            {lat: obj.x2, lng: obj.y2}
+                        ];
+                        displayPathElevation(path, elevator, map);
+                        console.log(obj);
+                    }
+                    else if (!obj.value_1 && obj.value_2) {// //get value of first point
+                        obj.value_1 = results[0].elevation;
+                        obj.x1 = location.lat();
+                        obj.y1 = location.lng();
+                        $("#value_1").val(obj.value_1);
+                    }
+                    else { // //get value of first point and reset second
+                        obj.value_1 = results[0].elevation;
+                        $("#value_1").val(obj.value_1);
+                        obj.x1 = location.lat();
+                        obj.y1 = location.lng();
+                        obj.value_2 = '';
+                        $("#value_2").val('');
+                        obj.x2 = '';
+                        obj.y2 = '';
+                    }
+                    $("#result").val('');
+                } else {
+                    infowindow.setContent('No results found');
+                }
             } else {
-              infowindow.setContent('No results found');
+                infowindow.setContent('Elevation service failed due to: ' + status);
             }
-          } else {
-            infowindow.setContent('Elevation service failed due to: ' + status);
-          }
         });
-      }
-    </script>
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVr_ncvvlmQrXtTABAIveu4G9nBRODObg&callback=initMap">
-    </script>
-  </body>
+    }
+    var rad = function (x) {
+        return x * Math.PI / 180;
+    };
+    //calculate distance between two locations (x1,y1),(x2,y2)
+    var getDistance = function (x1, y1, x2, y2) {
+        var R = 6378137; // Earth’s mean radius in meter
+        var dLat = rad(x2 - x1);
+        var dLong = rad(y2 - y1);
+        var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(rad(x1)) * Math.cos(rad(x2)) *
+            Math.sin(dLong / 2) * Math.sin(dLong / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+        return d; // returns the distance in meter
+    };
+    //calculate tilt
+    function tilt() {
+          return Math.atan(((obj.value_1+30) - obj.value_2) / obj.distance) * 180 / Math.PI;
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        $("#calculate-tilt").click(function () {
+            if (obj.value_1 && obj.value_2)
+                $("#result").val(tilt());
+        });
+    });
+</script>
+<script async defer
+        src=
+                "https://maps.googleapis.com/maps/api/js?key=AIzaSyCVr_ncvvlmQrXtTABAIveu4G9nBRODObg&v=3&callback=initMap">
+</script>
+
+</body>
 </html>
